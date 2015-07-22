@@ -1,0 +1,147 @@
+DirectoryIndex index.php index.html site-down.php
+
+ErrorDocument 403 /403.php
+ErrorDocument 404 /404.php
+
+AddDefaultCharset UTF-8
+
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+Options +FollowSymlinks
+Options -MultiViews
+RewriteEngine on
+IndexIgnore *
+RewriteBase /
+
+RewriteCond %{REQUEST_FILENAME} !-d 
+RewriteRule ^(.+)/$ $1 [R=301,L]
+
+RewriteRule ^avatar/([^/]+)/([^/]+)/(f|l|r|b|front|left|right|back)$ face.php?u=$1&s=$2&v=$3
+RewriteRule ^avatar/([^/]+)/(f|l|r|b|front|left|right|back)$ face.php?u=$1&v=$2
+RewriteRule ^avatar/([^/]+)/([^/]+)$ face.php?u=$1&s=$2
+RewriteRule ^avatar/([^/]+)$ face.php?u=$1
+RewriteRule ^skin/([^/]+)/([^/]+)$ skin.php?u=$1&s=$2
+RewriteRule ^skin/([^/]+)$ skin.php?u=$1
+</ifModule>
+
+# Block suspicious request methods
+RewriteCond %{REQUEST_METHOD} ^(HEAD|TRACE|DELETE|TRACK|DEBUG) [NC]
+RewriteRule ^(.*)$ - [F,L]
+
+# Block suspicious user agents and requests
+RewriteCond %{HTTP_USER_AGENT} (libwww-perl|wget|python|nikto|curl|scan|java|winhttp|clshttp|loader) [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} (<|>|'|%0A|%0D|%27|%3C|%3E|%00) [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} (;|<|>|'|"|\)|\(|%0A|%0D|%22|%27|%28|%3C|%3E|%00).*(libwww-perl|wget|python|nikto|curl|scan|java|winhttp|HTTrack|clshttp|archiver|loader|email|harvest|extract|grab|miner) [NC,OR]
+RewriteCond %{THE_REQUEST} \?\ HTTP/ [NC,OR]
+RewriteCond %{THE_REQUEST} \/\*\ HTTP/ [NC,OR]
+RewriteCond %{THE_REQUEST} etc/passwd [NC,OR]
+RewriteCond %{THE_REQUEST} cgi-bin [NC,OR]
+RewriteCond %{THE_REQUEST} (%0A|%0D) [NC,OR]
+
+# Block MySQL injections, RFI, base64, etc.
+RewriteCond %{QUERY_STRING} [a-zA-Z0-9_]=http:// [OR]
+RewriteCond %{QUERY_STRING} [a-zA-Z0-9_]=(\.\.//?)+ [OR]
+RewriteCond %{QUERY_STRING} [a-zA-Z0-9_]=/([a-z0-9_.]//?)+ [NC,OR]
+RewriteCond %{QUERY_STRING} \=PHP[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12} [NC,OR]
+RewriteCond %{QUERY_STRING} (\.\./|\.\.) [OR]
+RewriteCond %{QUERY_STRING} ftp\: [NC,OR]
+RewriteCond %{QUERY_STRING} http\: [NC,OR]
+RewriteCond %{QUERY_STRING} https\: [NC,OR]
+RewriteCond %{QUERY_STRING} \=\|w\| [NC,OR]
+RewriteCond %{QUERY_STRING} ^(.*)/self/(.*)$ [NC,OR]
+RewriteCond %{QUERY_STRING} ^(.*)cPath=http://(.*)$ [NC,OR]
+RewriteCond %{QUERY_STRING} (\<|%3C).*script.*(\>|%3E) [NC,OR]
+RewriteCond %{QUERY_STRING} (<|%3C)([^s]*s)+cript.*(>|%3E) [NC,OR]
+RewriteCond %{QUERY_STRING} (\<|%3C).*iframe.*(\>|%3E) [NC,OR]
+RewriteCond %{QUERY_STRING} (<|%3C)([^i]*i)+frame.*(>|%3E) [NC,OR]
+RewriteCond %{QUERY_STRING} base64_encode.*\(.*\) [NC,OR]
+RewriteCond %{QUERY_STRING} base64_(en|de)code[^(]*\([^)]*\) [NC,OR]
+RewriteCond %{QUERY_STRING} GLOBALS(=|\[|\%[0-9A-Z]{0,2}) [OR]
+RewriteCond %{QUERY_STRING} _REQUEST(=|\[|\%[0-9A-Z]{0,2}) [OR]
+RewriteCond %{QUERY_STRING} ^.*(\[|\]|\(|\)|<|>).* [NC,OR]
+RewriteCond %{QUERY_STRING} (NULL|OUTFILE|LOAD_FILE) [OR]
+RewriteCond %{QUERY_STRING} (\./|\../|\.../)+(motd|etc|bin) [NC,OR]
+RewriteCond %{QUERY_STRING} (localhost|loopback|127\.0\.0\.1) [NC,OR]
+RewriteCond %{QUERY_STRING} (<|>|'|%0A|%0D|%27|%3C|%3E|%00) [NC,OR]
+RewriteCond %{QUERY_STRING} concat[^\(]*\( [NC,OR]
+RewriteCond %{QUERY_STRING} union([^s]*s)+elect [NC,OR]
+RewriteCond %{QUERY_STRING} union([^a]*a)+ll([^s]*s)+elect [NC,OR]
+RewriteCond %{QUERY_STRING} (;|<|>|'|"|\)|%0A|%0D|%22|%27|%3C|%3E|%00).*(/\*|union|select|insert|drop|delete|update|cast|create|char|convert|alter|declare|order|script|set|md5|benchmark|encode) [NC,OR]
+RewriteCond %{QUERY_STRING} (sp_executesql) [NC]
+RewriteRule ^(.*)$ - [F,L]
+
+
+<IfModule mod_deflate.c>
+
+<IfModule mod_setenvif.c>
+<IfModule mod_headers.c>
+SetEnvIfNoCase ^(Accept-EncodXng|X-cept-Encoding|X{15}|~{15}|-{15})$ ^((gzip|deflate)\s*,?\s*)+|[X~-]{4,13}$ HAVE_Accept-Encoding
+RequestHeader append Accept-Encoding "gzip,deflate" env=HAVE_Accept-Encoding
+</IfModule>
+</IfModule>
+
+<IfModule mod_filter.c>
+AddOutputFilterByType DEFLATE font/truetype .ttf application/atom+xml \
+application/javascript \
+application/json \
+application/rss+xml \
+application/vnd.ms-fontobject \
+application/x-font-ttf \
+application/x-web-app-manifest+json \
+application/xhtml+xml \
+application/xml \
+image/svg+xml \
+image/x-icon \
+text/css \
+text/html \
+text/plain \
+text/x-component \
+text/xml
+</IfModule>
+
+</IfModule>
+
+<IfModule mod_headers.c>
+  <FilesMatch "\.(js|css)$">
+    Header append Vary: Accept-Encoding
+  </FilesMatch>
+</IfModule>
+
+# Expired
+<IfModule mod_expires.c>
+<Filesmatch "\.(jp?eg|png|gif|ico|woff|ttf)$">
+    ExpiresActive on
+    ExpiresDefault "access 1 year"
+</Filesmatch>
+ 
+<Filesmatch "\.(css|js|swf|mov|mp3|mpeg|mp4|ogg|ogv|xml|svg|html)$">
+    ExpiresActive on
+    ExpiresDefault "access 1 month"
+</Filesmatch>
+ 
+    ExpiresDefault "access 2 days"
+</IfModule>
+## END EXPIRES ##
+
+# Don't allow any pages to be framed - Defends against CSRF
+Header set X-Frame-Options DENY
+
+# Turn on IE8-IE9 XSS prevention tools
+Header set X-XSS-Protection "1; mode=block"
+
+# prevent mime based attacks
+Header set X-Content-Type-Options "nosniff"
+
+Options +FollowSymlinks
+Options -MultiViews
+
+RewriteEngine On
+
+RewriteCond %{THE_REQUEST} \?player=(\w+)\ HTTP
+RewriteRule ^index\.php$ /%1? [R=301,L]
+
+RewriteRule ^(\w+)$ index.php?player=$1 [L]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^([^\.]+)$ /$1.php [NC,L]
